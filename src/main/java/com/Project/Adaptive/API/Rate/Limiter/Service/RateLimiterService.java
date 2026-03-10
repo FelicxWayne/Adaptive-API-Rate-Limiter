@@ -10,11 +10,11 @@ public class RateLimiterService {
 
     private final ConcurrentHashMap<String, TokenBucket> buckets = new ConcurrentHashMap<>();
     private final long capacity = 10;
-    private final double refillRate = 5;
+    private final double refillRate = 2.0;
 
     public boolean isAllowed(String userId){
         TokenBucket bucket = buckets.computeIfAbsent(
-                userId,id -> new TokenBucket(capacity,refillRate)
+                userId,id -> new TokenBucket(id,capacity,refillRate)
         );
         return bucket.tryConsume();
     }
