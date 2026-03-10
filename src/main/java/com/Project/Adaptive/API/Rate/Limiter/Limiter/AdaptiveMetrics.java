@@ -28,7 +28,7 @@ public class AdaptiveMetrics {
     }
 
     public boolean isWindowExpired(){
-        long elapsed = System.currentTimeMillis();
+        long elapsed = System.currentTimeMillis()-windowStartTime;
         return elapsed >= windowDuration;
     }
 
