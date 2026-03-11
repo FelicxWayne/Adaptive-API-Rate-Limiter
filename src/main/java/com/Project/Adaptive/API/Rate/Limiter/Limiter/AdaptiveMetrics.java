@@ -7,17 +7,21 @@ public class AdaptiveMetrics {
     private double baseRefillRate;
     private int cleanWindowCount;
 
-    private static final long windowDuration = 60000;
-    private static final int cleanWindowsRequired = 5;
-    private static final double floorPercent = 0.10;
-    private static final double recoveryFactor = 1.1;
+    private long windowDuration;
+    private int cleanWindowsRequired ;
+    private double floorPercent ;
+    private double recoveryFactor;
 
-    public AdaptiveMetrics(double baseRefillRate){
+    public AdaptiveMetrics(double baseRefillRate,long windowDuration,int cleanWindowsRequired,double floorPercent,double recoveryFactor){
         this.baseRefillRate = baseRefillRate;
         this.totalRequests = 0;
         this.rejectedRequests = 0;
         this.cleanWindowCount =0;
         this.windowStartTime = System.currentTimeMillis();
+        this.windowDuration = windowDuration;
+        this.cleanWindowsRequired = cleanWindowsRequired;
+        this.recoveryFactor = recoveryFactor;
+        this.floorPercent = floorPercent;
     }
 
     public void recordRequest(boolean allowed){
