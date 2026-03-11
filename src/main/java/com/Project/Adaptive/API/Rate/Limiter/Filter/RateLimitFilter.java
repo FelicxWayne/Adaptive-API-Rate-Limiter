@@ -28,12 +28,9 @@ public class RateLimitFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         String apiKey = httpRequest.getHeader("X-API-Key");
-        if(apiKey == null || apiKey.isBlank()){
-            apiKey = "unknown";
-        }
         String ip = httpRequest.getRemoteAddr();
 
-        String userId = apiKey+":"+ip;
+        String userId = (apiKey != null && !apiKey.isBlank()) ? apiKey:ip;
 
         boolean allowed = rateLimiterService.isAllowed(userId);
 
