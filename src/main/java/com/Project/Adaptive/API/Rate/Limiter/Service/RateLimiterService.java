@@ -14,11 +14,23 @@ public class RateLimiterService {
     private long capacity;
 
     @Value("${rate.limiter.refill-rate}")
-    private  double refillRate;
+    private double refillRate;
+
+    @Value("${rate.limiter.window-duration}")
+    private long windowDuration;
+
+    @Value("${rate.limiter.clean-windows-required}")
+    private int cleanWindowsRequired;
+
+    @Value("${rate.limiter.recovery-factor}")
+    private double recoveryFactor;
+
+    @Value("${rate.limiter.floor-percent}")
+    private double floorPercent;
 
     public boolean isAllowed(String userId){
         TokenBucket bucket = buckets.computeIfAbsent(
-                userId,id -> new TokenBucket(id,capacity,refillRate)
+                userId,id -> new TokenBucket(id,capacity,refillRate,windowDuration,cleanWindowsRequired,recoveryFactor,floorPercent)
         );
         return bucket.tryConsume();
     }

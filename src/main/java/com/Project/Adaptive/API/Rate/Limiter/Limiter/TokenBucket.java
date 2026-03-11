@@ -8,13 +8,13 @@ public class TokenBucket {
     private long lastRefillTime;
     private AdaptiveMetrics adaptiveMetrics;
 
-    public TokenBucket(String userId,long capacity,double refillRate){
+    public TokenBucket(String userId,long capacity,double refillRate,long windowDuration,int cleanWindowsRequired,double recoveryFactor,double floorPercent){
         this.userId = userId;
         this.capacity = capacity;
         this.refillRate = refillRate;
         this.tokens = capacity;
         this.lastRefillTime = System.currentTimeMillis();
-        this.adaptiveMetrics = new AdaptiveMetrics(refillRate);
+        this.adaptiveMetrics = new AdaptiveMetrics(refillRate,windowDuration,cleanWindowsRequired,recoveryFactor,floorPercent);
     }
 
     public synchronized boolean tryConsume(){
