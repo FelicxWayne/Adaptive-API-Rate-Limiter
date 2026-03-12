@@ -1,6 +1,7 @@
 package com.Project.Adaptive.API.Rate.Limiter.Repository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -99,6 +100,18 @@ public class RateLimiterRepository {
     public long getWindowStartTime(String clientId){
         String value = get(clientId,"WindowStartTime");
         return (value!=null) ? Long.parseLong(value):System.currentTimeMillis();
+    }
+
+    @Value("${rate.limiter.capacity}")
+    private long capacity;
+
+    public void saveCapacity(String clientId, long capacity){
+        save(clientId,"capacity",String.valueOf(capacity));
+    }
+
+    public long getCapacity(String clientId){
+        String value = get(clientId,"capacity");
+        return (value!=null) ? Long.parseLong(value):capacity;
     }
 
 }

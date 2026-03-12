@@ -1,68 +1,75 @@
 package com.Project.Adaptive.API.Rate.Limiter.Limiter;
 
-public class AdaptiveMetrics {
-    private long totalRequests;
-    private long rejectedRequests;
-    private long windowStartTime;
-    private double baseRefillRate;
-    private int cleanWindowCount;
+import com.Project.Adaptive.API.Rate.Limiter.Repository.RateLimiterRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+@Component
+public class AdaptiveMetrics {
+
+    @Autowired
+    private RateLimiterRepository repository;
+
+    @Value("${rate.limiter.window-duration}")
     private long windowDuration;
+
+    @Value("${rate.limiter.clean-windows-required}")
     private int cleanWindowsRequired ;
+
+    @Value("${rate.limiter.floor-percent}")
     private double floorPercent ;
+
+    @Value("${rate.limiter.recovery-factor}")
     private double recoveryFactor;
 
-    public AdaptiveMetrics(double baseRefillRate,long windowDuration,int cleanWindowsRequired,double floorPercent,double recoveryFactor){
-        this.baseRefillRate = baseRefillRate;
-        this.totalRequests = 0;
-        this.rejectedRequests = 0;
-        this.cleanWindowCount =0;
-        this.windowStartTime = System.currentTimeMillis();
-        this.windowDuration = windowDuration;
-        this.cleanWindowsRequired = cleanWindowsRequired;
-        this.recoveryFactor = recoveryFactor;
-        this.floorPercent = floorPercent;
-    }
-
-    public void recordRequest(boolean allowed){
-        totalRequests++;
+    public void recordRequest(String clientId, boolean allowed){
+        long total = repository.getTotalRequest(clientId);
+        repository.saveTotalRequest(clientId,total+1);
         if(!allowed){
-            rejectedRequests++;
+            long rejected = repository.getRejectedRequest(clientId);
+            repository.saveRejectedRequest(clientId,rejected)   ;
         }
     }
 
-    public boolean isWindowExpired(){
+    public boolean isWindowExpired(String clientId){
+        long windowStartTime = repository.getWindowStartTime(clientId);
         long elapsed = System.currentTimeMillis()-windowStartTime;
         return elapsed >= windowDuration;
     }
 
-    public double evaluate(double currentRefillRate){
+    public double evaluate(String clientId,double currentRefillRate){
+        double baseRefillRate = repository.getBaseRefillRate(clientId);
         double floor = floorPercent*baseRefillRate;
 
+        long totalRequests = repository.getTotalRequest(clientId);
+        long rejectedRequests = repository.getRejectedRequest(clientId);
         if(totalRequests == 0){
-            resetWindow();
+            resetWindow(clientId);
             return currentRefillRate;
         }
 
         double rejectRatio = (double) rejectedRequests/totalRequests;
 
         if(rejectRatio > 0.0){
-            cleanWindowCount = 0;
-            resetWindow();
+            repository.saveCleanWindowCount(clientId,0);
+            resetWindow(clientId);
             return Math.max(floor,currentRefillRate*(1-rejectRatio));
         }
 
+        int cleanWindowCount = repository.getCleanWindowCount(clientId);
         cleanWindowCount++;
-        resetWindow();
+        repository.saveCleanWindowCount(clientId,cleanWindowCount);
+        resetWindow(clientId);
 
         if(cleanWindowCount >= cleanWindowsRequired){
             return Math.min(baseRefillRate,currentRefillRate*recoveryFactor);
         }
         return currentRefillRate;
     }
-    private void resetWindow(){
-        totalRequests = 0;
-        rejectedRequests = 0;
-        windowStartTime = System.currentTimeMillis();
+    private void resetWindow(String clientId){
+        repository.saveTotalRequest(clientId,0);
+        repository.saveRejectedRequest(clientId,0);
+        repository.saveWindowStartTime(clientId,System.currentTimeMillis());
     }
 }

@@ -1,41 +1,47 @@
 package com.Project.Adaptive.API.Rate.Limiter.Limiter;
 
+import com.Project.Adaptive.API.Rate.Limiter.Repository.RateLimiterRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+@Component
 public class TokenBucket {
-    private String userId;
-    private long capacity;
-    private double tokens;
-    private double refillRate;
-    private long lastRefillTime;
+
+    @Autowired
+    private RateLimiterRepository repository;
+
+    @Autowired
     private AdaptiveMetrics adaptiveMetrics;
 
-    public TokenBucket(String userId,long capacity,double refillRate,long windowDuration,int cleanWindowsRequired,double recoveryFactor,double floorPercent){
-        this.userId = userId;
-        this.capacity = capacity;
-        this.refillRate = refillRate;
-        this.tokens = capacity;
-        this.lastRefillTime = System.currentTimeMillis();
-        this.adaptiveMetrics = new AdaptiveMetrics(refillRate,windowDuration,cleanWindowsRequired,recoveryFactor,floorPercent);
-    }
+    public synchronized boolean tryConsume(String clientId){
 
-    public synchronized boolean tryConsume(){
-
-        if(adaptiveMetrics.isWindowExpired()){
-            refillRate = adaptiveMetrics.evaluate(refillRate);
+        if(adaptiveMetrics.isWindowExpired(clientId)){
+            double currentRefillRate = repository.getRefillRate(clientId);
+            double newRefillRate = adaptiveMetrics.evaluate(clientId, currentRefillRate);
+            repository.saveRefillRate(clientId,newRefillRate);
         }
 
         long now = System.currentTimeMillis();
+        long lastRefillTime = repository.getLastRefillTime(clientId);
+        double refillRate = repository.getRefillRate(clientId);
+        double tokens = repository.getTokens(clientId);
+        long capacity = repository.getCapacity(clientId);
+
         long elapsedTime = now-lastRefillTime;
         double elapsedSec = elapsedTime/1000.0;
 
         tokens = Math.min(capacity,tokens+(elapsedSec*refillRate));
-        lastRefillTime = now;
+        repository.saveLastRefillTime(clientId,now);
 
         if(tokens>=1){
             tokens --;
-            adaptiveMetrics.recordRequest(true);
+            repository.saveTokens(clientId,tokens);
+            adaptiveMetrics.recordRequest(clientId,true);
             return true;
         }
-        adaptiveMetrics.recordRequest(false);
+
+        repository.saveTokens(clientId,tokens);
+        adaptiveMetrics.recordRequest(clientId,false);
         return false;
     }
 

@@ -30,9 +30,9 @@ public class RateLimitFilter implements Filter {
         String apiKey = httpRequest.getHeader("X-API-Key");
         String ip = httpRequest.getRemoteAddr();
 
-        String userId = (apiKey != null && !apiKey.isBlank()) ? apiKey:ip;
+        String clientId = (apiKey != null && !apiKey.isBlank()) ? apiKey:ip;
 
-        boolean allowed = rateLimiterService.isAllowed(userId);
+        boolean allowed = rateLimiterService.isAllowed(clientId);
 
         if(!allowed){
             httpResponse.setStatus(429);
