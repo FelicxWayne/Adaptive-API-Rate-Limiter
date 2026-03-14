@@ -28,7 +28,7 @@ public class AdaptiveMetrics {
         repository.saveTotalRequest(clientId,total+1);
         if(!allowed){
             long rejected = repository.getRejectedRequest(clientId);
-            repository.saveRejectedRequest(clientId,rejected)   ;
+            repository.saveRejectedRequest(clientId,rejected+1)   ;
         }
     }
 
@@ -58,8 +58,10 @@ public class AdaptiveMetrics {
         }
 
         int cleanWindowCount = repository.getCleanWindowCount(clientId);
-        cleanWindowCount++;
-        repository.saveCleanWindowCount(clientId,cleanWindowCount);
+        if(cleanWindowCount < cleanWindowsRequired){
+            cleanWindowCount++;
+            repository.saveCleanWindowCount(clientId,cleanWindowCount);
+        }
         resetWindow(clientId);
 
         if(cleanWindowCount >= cleanWindowsRequired){
