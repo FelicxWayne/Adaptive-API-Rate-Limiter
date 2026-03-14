@@ -23,6 +23,7 @@ public class RateLimitFilter implements Filter {
             ServletResponse response,
             FilterChain chain
     ) throws IOException,ServletException{
+        System.out.println("Filter triggered!");
 
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
