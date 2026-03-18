@@ -1,6 +1,9 @@
 package com.Project.Adaptive.API.Rate.Limiter.Filter;
 
 
+import com.Project.Adaptive.API.Rate.Limiter.Repository.ApiKeyRepository;
+import com.Project.Adaptive.API.Rate.Limiter.Service.ApiKeyService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.Project.Adaptive.API.Rate.Limiter.Service.RateLimiterService;
 import jakarta.servlet.*;
@@ -17,6 +20,9 @@ public class RateLimitFilter implements Filter {
         this.rateLimiterService = rateLimiterService;
     }
 
+    @Autowired
+    private ApiKeyService apiKeyService;
+
     @Override
     public void doFilter(
             ServletRequest request,
@@ -31,7 +37,14 @@ public class RateLimitFilter implements Filter {
         String apiKey = httpRequest.getHeader("X-API-Key");
         String ip = httpRequest.getRemoteAddr();
 
-        String clientId = (apiKey != null && !apiKey.isBlank()) ? apiKey:ip;
+        String clientId;
+
+        if(apiKey != null && !apiKey.isBlank() && apiKeyService.isValidKey(apiKey)){
+            clientId = apiKey;
+        }
+        else{
+            clientId = ip;
+        }
 
         boolean allowed = rateLimiterService.isAllowed(clientId);
 

@@ -37,11 +37,13 @@ public class TokenBucket {
             tokens --;
             repository.saveTokens(clientId,tokens);
             adaptiveMetrics.recordRequest(clientId,true);
+            repository.refreshTTL(clientId);
             return true;
         }
 
         repository.saveTokens(clientId,tokens);
         adaptiveMetrics.recordRequest(clientId,false);
+        repository.refreshTTL(clientId);
         return false;
     }
 

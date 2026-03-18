@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.concurrent.TimeUnit;
+
 @Repository
 public class RateLimiterRepository {
 
@@ -112,6 +114,13 @@ public class RateLimiterRepository {
     public long getCapacity(String clientId){
         String value = get(clientId,"capacity");
         return (value!=null) ? Long.parseLong(value):capacity;
+    }
+
+    @Value("${rate.limiter.ttl.hours}")
+    private long ttlhours;
+
+    public void refreshTTL(String clientId){
+        redisTemplate.expire("User:"+clientId,ttlhours, TimeUnit.HOURS);
     }
 
 }
