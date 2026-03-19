@@ -3,6 +3,8 @@ package com.Project.Adaptive.API.Rate.Limiter.Filter;
 
 import com.Project.Adaptive.API.Rate.Limiter.Repository.ApiKeyRepository;
 import com.Project.Adaptive.API.Rate.Limiter.Service.ApiKeyService;
+import com.Project.Adaptive.API.Rate.Limiter.dto.RateLimitResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.Project.Adaptive.API.Rate.Limiter.Service.RateLimiterService;
@@ -50,7 +52,15 @@ public class RateLimitFilter implements Filter {
 
         if(!allowed){
             httpResponse.setStatus(429);
-            httpResponse.getWriter().write("Too Many Requests");
+            httpResponse.setContentType("application/json");
+            RateLimitResponse rateLimitResponse = new RateLimitResponse(
+                    clientId,
+                    "Too Many Requests, Retry shortly",
+                    "Rate_Limited"
+            );
+            httpResponse.getWriter().write(
+                    new ObjectMapper().writeValueAsString(rateLimitResponse)
+            );
             return;
         }
         chain.doFilter(request,response);
