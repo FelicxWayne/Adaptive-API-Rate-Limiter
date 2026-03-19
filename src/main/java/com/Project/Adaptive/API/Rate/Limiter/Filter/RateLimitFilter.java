@@ -51,16 +51,21 @@ public class RateLimitFilter implements Filter {
         boolean allowed = rateLimiterService.isAllowed(clientId);
 
         if(!allowed){
-            httpResponse.setStatus(429);
-            httpResponse.setContentType("application/json");
-            RateLimitResponse rateLimitResponse = new RateLimitResponse(
-                    clientId,
-                    "Too Many Requests, Retry shortly",
-                    "Rate_Limited"
-            );
-            httpResponse.getWriter().write(
-                    new ObjectMapper().writeValueAsString(rateLimitResponse)
-            );
+            try {
+                httpResponse.setStatus(429);
+                RateLimitResponse rateLimitResponse = new RateLimitResponse(
+                        clientId,
+                        "Too Many Requests, Retry shortly",
+                        "Rate_Limited"
+                );
+                httpResponse.getWriter().write(
+                        new ObjectMapper().writeValueAsString(rateLimitResponse)
+                );
+            } catch( Exception e){
+                System.out.println("Filter error: " + e.getMessage());
+                httpResponse.setStatus(429);
+                httpResponse.getWriter().write("Too Many Requests, Retry Shortly");
+            }
             return;
         }
         chain.doFilter(request,response);

@@ -10,4 +10,8 @@ public class RateLimitResponse {
         this.message = message;
         this.status = status;
     }
+
+    public String getClientId() { return clientId; }
+    public String getMessage() { return message; }
+    public String getStatus() { return status; }
 }
