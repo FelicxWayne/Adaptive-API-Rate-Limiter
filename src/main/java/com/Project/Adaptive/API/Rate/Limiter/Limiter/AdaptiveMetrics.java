@@ -1,12 +1,15 @@
 package com.Project.Adaptive.API.Rate.Limiter.Limiter;
 
 import com.Project.Adaptive.API.Rate.Limiter.Repository.RateLimiterRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class AdaptiveMetrics {
+    private static final Logger log = LoggerFactory.getLogger(AdaptiveMetrics.class);
 
     @Autowired
     private RateLimiterRepository repository;
@@ -52,9 +55,15 @@ public class AdaptiveMetrics {
         double rejectRatio = (double) rejectedRequests/totalRequests;
 
         if(rejectRatio > 0.0){
+            double newRate =  Math.max(floor,currentRefillRate*(1-rejectRatio));
+            log.warn("PENALTY | clientId: {} | rejectRatio: {} | oldRate: {} | newRate: {}",
+                    clientId,
+                    String.format("%.2f", rejectRatio),
+                    String.format("%.2f", currentRefillRate),
+                    String.format("%.2f", newRate));
             repository.saveCleanWindowCount(clientId,0);
             resetWindow(clientId);
-            return Math.max(floor,currentRefillRate*(1-rejectRatio));
+            return newRate;
         }
 
         int cleanWindowCount = repository.getCleanWindowCount(clientId);
@@ -65,7 +74,13 @@ public class AdaptiveMetrics {
         resetWindow(clientId);
 
         if(cleanWindowCount >= cleanWindowsRequired){
-            return Math.min(baseRefillRate,currentRefillRate*recoveryFactor);
+            double newRate = Math.min(baseRefillRate,currentRefillRate*recoveryFactor);
+            log.info("RECOVERY | clientId: {} | cleanWindows: {} | oldRate: {} | newRate: {}",
+                    clientId,
+                    cleanWindowCount,
+                    String.format("%.2f", currentRefillRate),
+                    String.format("%.2f", newRate));
+            return newRate;
         }
         return currentRefillRate;
     }

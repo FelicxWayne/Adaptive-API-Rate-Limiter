@@ -3,6 +3,8 @@ package com.Project.Adaptive.API.Rate.Limiter.Service;
 
 import com.Project.Adaptive.API.Rate.Limiter.Limiter.TokenBucket;
 import com.Project.Adaptive.API.Rate.Limiter.Repository.RateLimiterRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class RateLimiterService {
-
+    private static final Logger log = LoggerFactory.getLogger(RateLimiterService.class);
     @Autowired
     private RateLimiterRepository repository;
 
@@ -38,6 +40,7 @@ public class RateLimiterService {
 
     public boolean isAllowed(String clientId){
         if(!repository.exists(clientId)){
+            log.info("New Client | clientID : {}",clientId);
             repository.saveTokens(clientId,capacity);
             repository.saveRefillRate(clientId,refillRate);
             repository.saveBaseRefillRate(clientId,refillRate);
