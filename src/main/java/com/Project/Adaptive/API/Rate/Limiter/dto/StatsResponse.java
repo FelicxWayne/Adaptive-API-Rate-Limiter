@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 
 public class StatsResponse {
     private String clientId;
-    private double tokens;
+    private double liveTokens;
     private double refillRate;
     private double baseRefillRate;
     private int cleanWindowCount;
@@ -15,10 +15,11 @@ public class StatsResponse {
     private long rejectedRequest;
     private String lastRefillTime;
     private String windowStartTime;
+    private String checkedAt;
 
     public StatsResponse(RatelimitStats stats){
         this.clientId = stats.getClientId();
-        this.tokens = stats.getTokens();
+        this.liveTokens = Math.round(stats.getTokens()*100.0)/100.0;
         this.refillRate = stats.getRefillRate();
         this.baseRefillRate = stats.getBaseRefillRate();
         this.cleanWindowCount = stats.getCleanWindowCount();
@@ -26,6 +27,7 @@ public class StatsResponse {
         this.rejectedRequest = stats.getRejectedRequest();;
         this.windowStartTime = toReadable(stats.getWindowStartTime());
         this.lastRefillTime = toReadable(stats.getLastRefillTime());
+        this.checkedAt = toReadable(System.currentTimeMillis());
     }
 
     public String toReadable(long epochMs){
@@ -33,7 +35,7 @@ public class StatsResponse {
     }
 
     public String getClientId(){return clientId;}
-    public double getTokens(){return tokens;}
+    public double getliveTokens(){return liveTokens;}
     public double getRefillRate(){return refillRate;}
     public double getBaseRefillRate(){return baseRefillRate;}
     public int getCleanWindowCount(){ return cleanWindowCount;}
@@ -41,4 +43,5 @@ public class StatsResponse {
     public long getRejectedRequest(){return rejectedRequest;}
     public String getWindowStartTime(){return windowStartTime;}
     public String getLastRefillTime(){return lastRefillTime;}
+    public String getCheckedAt(){ return checkedAt;}
 }

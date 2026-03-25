@@ -2,6 +2,7 @@ package com.Project.Adaptive.API.Rate.Limiter.Service;
 
 
 import com.Project.Adaptive.API.Rate.Limiter.Limiter.TokenBucket;
+import com.Project.Adaptive.API.Rate.Limiter.Model.RatelimitStats;
 import com.Project.Adaptive.API.Rate.Limiter.Repository.RateLimiterRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,5 +52,34 @@ public class RateLimiterService {
             repository.saveWindowStartTime(clientId,System.currentTimeMillis());
         }
         return tokenBucket.tryConsume(clientId);
+    }
+
+    public RatelimitStats getStats(String clientId){
+        double storedTokens = repository.getTokens(clientId);
+        double refillRate = repository.getRefillRate(clientId);
+        double baseRefillRate = repository.getBaseRefillRate(clientId);
+        long capacity = repository.getCapacity(clientId);
+        long lastRefillTime = repository.getLastRefillTime(clientId);
+        long windowStartTime = repository.getWindowStartTime(clientId);
+        long totalRequest = repository.getTotalRequest(clientId);
+        long rejectedRequest = repository.getRejectedRequest(clientId);
+        int cleanWindowCount = repository.getCleanWindowCount(clientId);
+
+        long now  = System.currentTimeMillis();
+        long elapsed = now-lastRefillTime;
+        double elapsedSec = elapsed/1000.0;
+        double liveTokens = Math.min(capacity,storedTokens+(refillRate*elapsedSec));
+
+        return new RatelimitStats(
+                clientId,
+                liveTokens,
+                refillRate,
+                baseRefillRate,
+                cleanWindowCount,
+                windowStartTime,
+                lastRefillTime,
+                totalRequest,
+                rejectedRequest
+        );
     }
 }
