@@ -6,8 +6,10 @@ import com.Project.Adaptive.API.Rate.Limiter.Service.ApiKeyService;
 import com.Project.Adaptive.API.Rate.Limiter.dto.ApiKeyResponse;
 import com.Project.Adaptive.API.Rate.Limiter.dto.StatsResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import com.Project.Adaptive.API.Rate.Limiter.Repository.RateLimiterRepository;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/admin")
@@ -25,7 +27,7 @@ public class AdminController {
     @GetMapping("/stats")
     public StatsResponse getStats(@RequestParam String clientId){
         if(!repository.exists(clientId)){
-            return null;
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found");
         }
         RatelimitStats stats = rateLimiterService.getStats(clientId);
         return new StatsResponse(stats);
