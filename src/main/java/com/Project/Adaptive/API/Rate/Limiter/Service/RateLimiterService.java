@@ -4,6 +4,7 @@ package com.Project.Adaptive.API.Rate.Limiter.Service;
 import com.Project.Adaptive.API.Rate.Limiter.Limiter.TokenBucket;
 import com.Project.Adaptive.API.Rate.Limiter.Model.RatelimitStats;
 import com.Project.Adaptive.API.Rate.Limiter.Repository.RateLimiterRepository;
+import com.Project.Adaptive.API.Rate.Limiter.dto.DashboardMetricsResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,5 +72,16 @@ public class RateLimiterService {
                 totalRequest,
                 rejectedRequest
         );
+    }
+
+    public DashboardMetricsResponse getGlobalMetrics() {
+        long globalTotal = repository.getGlobalTotal();
+        long globalRejected = repository.getGlobalRejected();
+
+        long globalAllowed = globalTotal - globalRejected;
+
+        int avgLimitPerMin = (int)(refillRate * 60);
+
+        return new DashboardMetricsResponse(globalTotal, globalAllowed, globalRejected, avgLimitPerMin);
     }
 }

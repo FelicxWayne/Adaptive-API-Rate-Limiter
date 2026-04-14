@@ -123,4 +123,23 @@ public class RateLimiterRepository {
         redisTemplate.expire("User:"+clientId,ttlhours, TimeUnit.HOURS);
     }
 
+
+    public void incrementGlobalTotal() {
+        redisTemplate.opsForValue().increment("Global:TotalRequests");
+    }
+
+    public long getGlobalTotal() {
+        String value = redisTemplate.opsForValue().get("Global:TotalRequests");
+        return (value != null) ? Long.parseLong(value) : 0;
+    }
+
+    public void incrementGlobalRejected() {
+        redisTemplate.opsForValue().increment("Global:RejectedRequests");
+    }
+
+    public long getGlobalRejected() {
+        String value = redisTemplate.opsForValue().get("Global:RejectedRequests");
+        return (value != null) ? Long.parseLong(value) : 0;
+    }
+
 }

@@ -29,9 +29,14 @@ public class AdaptiveMetrics {
     public void recordRequest(String clientId, boolean allowed){
         long total = repository.getTotalRequest(clientId);
         repository.saveTotalRequest(clientId,total+1);
+
+        repository.incrementGlobalTotal();
+
         if(!allowed){
             long rejected = repository.getRejectedRequest(clientId);
-            repository.saveRejectedRequest(clientId,rejected+1)   ;
+            repository.saveRejectedRequest(clientId,rejected+1);
+
+            repository.incrementGlobalRejected();
         }
     }
 
